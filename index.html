@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Capture Form</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        form { max-width: 400px; margin: auto; background: #f9f9f9; padding: 20px; border-radius: 8px; }
+        input, button { width: 100%; margin: 10px 0; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Data Capture Form</h2>
+    <form id="dataForm">
+        <input type="text" id="name" placeholder="Enter your name" required>
+        <input type="email" id="email" placeholder="Enter your email" required>
+        <button type="submit">Submit</button>
+    </form>
+    <script>
+        document.getElementById('dataForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            console.log('Name:', name, 'Email:', email);
+            alert('Data captured successfully!');
+        });
+    </script>
+</body>
+</html>
