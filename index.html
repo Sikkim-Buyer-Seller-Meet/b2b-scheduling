@@ -110,21 +110,31 @@
                     if (data.length > 0 && data[0].Booked === 'Yes') {
                         alert('This table and time slot are already booked. Please choose another.');
                         loadTables();
-                    } else if (data.length > 0) {
-                        const rowId = data[0].ID;
-                        fetch(`${sheetDBUrl}/ID/${rowId}`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ Name: name, Designation: designation, Organisation: organisation, Sector: sector, Contact: contact, Email: email, Role: role, SectorInterest: sectorInterest, Booked: 'Yes' })
-                        })
-                        .then(response => response.json())
-                        .then(() => {
-                            alert('Booking successful!');
-                            loadTimeSlots();
-                        })
-                        .catch(error => alert('Error updating booking.'));
                     } else {
-                        alert('Error: Selected table-time slot does not exist!');
+                        return fetch(`${sheetDBUrl}/search?TimeSlot=${timeSlot}&TableNumber=${tableNumber}`)
+                            .then(response => response.json())
+                            .then(latestData => {
+                                if (latestData.length > 0 && latestData[0].Booked === 'Yes') {
+                                    alert('Someone else just booked this slot. Please select another.');
+                                    loadTables();
+                                } else {
+                                    const rowId = latestData.length > 0 ? latestData[0].ID : null;
+                                    if (rowId) {
+                                        fetch(`${sheetDBUrl}/ID/${rowId}`, {
+                                            method: 'PATCH',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ Name: name, Designation: designation, Organisation: organisation, Sector: sector, Contact: contact, Email: email, Role: role, SectorInterest: sectorInterest, Booked: 'Yes' })
+                                        })
+                                        .then(() => {
+                                            alert('Booking successful!');
+                                            loadTimeSlots();
+                                        })
+                                        .catch(error => alert('Error updating booking.'));
+                                    } else {
+                                        alert('Error: Selected table-time slot does not exist!');
+                                    }
+                                }
+                            });
                     }
                 })
                 .catch(error => console.error('Error checking existing booking:', error));
