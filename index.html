@@ -107,7 +107,10 @@
             fetch(`${sheetDBUrl}/search?TimeSlot=${timeSlot}&TableNumber=${tableNumber}`)
                 .then(response => response.json())
                 .then(data => {
-                    if (data.length > 0) {
+                    if (data.length > 0 && data[0].Booked === 'Yes') {
+                        alert('This table and time slot are already booked. Please choose another.');
+                        loadTables();
+                    } else if (data.length > 0) {
                         const rowId = data[0].ID;
                         fetch(`${sheetDBUrl}/ID/${rowId}`, {
                             method: 'PATCH',
@@ -116,7 +119,7 @@
                         })
                         .then(response => response.json())
                         .then(() => {
-                            alert('Booking updated successfully!');
+                            alert('Booking successful!');
                             loadTimeSlots();
                         })
                         .catch(error => alert('Error updating booking.'));
