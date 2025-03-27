@@ -14,54 +14,99 @@
     <h2>Data Capture Form</h2>
     <form id="dataForm">
         <input type="text" id="name" placeholder="Enter your name" required>
+        <input type="text" id="designation" placeholder="Enter your designation" required>
+        <input type="text" id="organisation" placeholder="Enter your organisation" required>
+        <input type="text" id="sector" placeholder="Enter your sector" required>
+        <input type="tel" id="contact" placeholder="Enter your contact number" required>
         <input type="email" id="email" placeholder="Enter your email" required>
+        <select id="role" required>
+            <option value="" disabled selected>Select your role</option>
+            <option value="buyer">Buyer</option>
+            <option value="investor">Investor</option>
+            <option value="trader">Trader</option>
+            <option value="exporter">Exporter</option>
+            <option value="dealer">Dealer</option>
+        </select>
         <select id="timeSlot" required>
             <option value="" disabled selected>Select a time slot</option>
+        </select>
+        <select id="tableNumber" required>
+            <option value="" disabled selected>Select a table number</option>
+        </select>
+        <select id="sectorInterest" required>
+            <option value="" disabled selected>Select your sector of interest</option>
         </select>
         <button type="submit">Submit</button>
     </form>
     <script>
         const sheetDBUrl = 'https://sheetdb.io/api/v1/purojoltz4ayd';
 
-        // Fetch available time slots
-        function loadTimeSlots() {
+        // Fetch available options from the backend
+        function loadOptions() {
             fetch(sheetDBUrl)
                 .then(response => response.json())
                 .then(data => {
                     const timeSlotDropdown = document.getElementById('timeSlot');
+                    const tableNumberDropdown = document.getElementById('tableNumber');
+                    const sectorInterestDropdown = document.getElementById('sectorInterest');
+                    
                     timeSlotDropdown.innerHTML = '<option value="" disabled selected>Select a time slot</option>';
+                    tableNumberDropdown.innerHTML = '<option value="" disabled selected>Select a table number</option>';
+                    sectorInterestDropdown.innerHTML = '<option value="" disabled selected>Select your sector of interest</option>';
+                    
                     data.forEach(entry => {
                         if (!entry.Booked) { // Assuming "Booked" column is empty for available slots
-                            const option = document.createElement('option');
-                            option.value = entry.TimeSlot;
-                            option.textContent = entry.TimeSlot;
-                            timeSlotDropdown.appendChild(option);
+                            const timeOption = document.createElement('option');
+                            timeOption.value = entry.TimeSlot;
+                            timeOption.textContent = entry.TimeSlot;
+                            timeSlotDropdown.appendChild(timeOption);
+                        }
+                        
+                        if (entry.TableNumber) {
+                            const tableOption = document.createElement('option');
+                            tableOption.value = entry.TableNumber;
+                            tableOption.textContent = entry.TableNumber;
+                            tableNumberDropdown.appendChild(tableOption);
+                        }
+
+                        if (entry.SectorInterest) {
+                            const sectorOption = document.createElement('option');
+                            sectorOption.value = entry.SectorInterest;
+                            sectorOption.textContent = entry.SectorInterest;
+                            sectorInterestDropdown.appendChild(sectorOption);
                         }
                     });
                 })
-                .catch(error => console.error('Error loading time slots:', error));
+                .catch(error => console.error('Error loading options:', error));
         }
 
         document.getElementById('dataForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const name = document.getElementById('name').value;
+            const designation = document.getElementById('designation').value;
+            const organisation = document.getElementById('organisation').value;
+            const sector = document.getElementById('sector').value;
+            const contact = document.getElementById('contact').value;
             const email = document.getElementById('email').value;
+            const role = document.getElementById('role').value;
             const timeSlot = document.getElementById('timeSlot').value;
+            const tableNumber = document.getElementById('tableNumber').value;
+            const sectorInterest = document.getElementById('sectorInterest').value;
 
             fetch(sheetDBUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: { Name: name, Email: email, TimeSlot: timeSlot, Booked: 'Yes' } })
+                body: JSON.stringify({ data: { Name: name, Designation: designation, Organisation: organisation, Sector: sector, Contact: contact, Email: email, Role: role, TimeSlot: timeSlot, TableNumber: tableNumber, SectorInterest: sectorInterest, Booked: 'Yes' } })
             })
             .then(response => response.json())
             .then(data => {
                 alert('Booking confirmed!');
-                loadTimeSlots(); // Refresh available slots
+                loadOptions(); // Refresh available options
             })
             .catch(error => alert('Error saving data.'));
         });
 
-        loadTimeSlots();
+        loadOptions();
     </script>
 </body>
 </html>
