@@ -104,17 +104,27 @@
             const tableNumber = document.getElementById('tableNumber').value;
             const sectorInterest = document.getElementById('sectorInterest').value;
 
-            fetch(sheetDBUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: { Name: name, Designation: designation, Organisation: organisation, Sector: sector, Contact: contact, Email: email, Role: role, TimeSlot: timeSlot, TableNumber: tableNumber, SectorInterest: sectorInterest, Booked: 'Yes' } })
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert('Booking confirmed!');
-                loadTimeSlots();
-            })
-            .catch(error => alert('Error saving data.'));
+            fetch(`${sheetDBUrl}/search?TimeSlot=${timeSlot}&TableNumber=${tableNumber}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        const rowId = data[0].id;
+                        fetch(`${sheetDBUrl}/id/${rowId}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ Name: name, Designation: designation, Organisation: organisation, Sector: sector, Contact: contact, Email: email, Role: role, SectorInterest: sectorInterest, Booked: 'Yes' })
+                        })
+                        .then(response => response.json())
+                        .then(() => {
+                            alert('Booking updated successfully!');
+                            loadTimeSlots();
+                        })
+                        .catch(error => alert('Error updating booking.'));
+                    } else {
+                        alert('Error: Selected table-time slot does not exist!');
+                    }
+                })
+                .catch(error => console.error('Error checking existing booking:', error));
         });
 
         loadTimeSlots();
