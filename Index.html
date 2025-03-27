@@ -7,7 +7,7 @@
     <script>
         async function fetchData() {
             try {
-                const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=getData");
+                const response = await fetch("                const response = await fetch("https://script.google.com/macros/s/https://script.google.com/macros/s/AKfycby3kYlFEZqJgtOi0clB0GPayhHW60uIxWeLkbgKDYA/dev/exec?action=getData");
                 const data = await response.json();
                 const scheduleTable = document.getElementById("scheduleTable");
                 scheduleTable.innerHTML = "";
@@ -40,7 +40,7 @@
             }
 
             try {
-                const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=bookSlot", {
+                const response = await fetch("                const response = await fetch("https://script.google.com/macros/s/https://script.google.com/macros/s/AKfycby3kYlFEZqJgtOi0clB0GPayhHW60uIxWeLkbgKDYA/dev/exec?action=bookSlot", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id, name, designation, organisation, email, phone, sector })
