@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f3f3f3;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input, button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: blue;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Basic Information</h2>
+        <form id="simpleForm">
+            <label>Name:</label>
+            <input type="text" id="name" required>
+            <label>Number:</label>
+            <input type="tel" id="number" required>
+            <label>Company:</label>
+            <input type="text" id="company" required>
+            <label>Email:</label>
+            <input type="email" id="email" required>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    <script>
+        document.getElementById("simpleForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const formData = {
+                name: document.getElementById("name").value,
+                number: document.getElementById("number").value,
+                company: document.getElementById("company").value,
+                email: document.getElementById("email").value
+            };
+            console.log("Form submitted:", formData);
+            alert("Form submitted successfully!");
+        });
+    </script>
+</body>
+</html>
