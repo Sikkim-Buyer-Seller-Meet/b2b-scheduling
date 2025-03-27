@@ -7,7 +7,7 @@
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         form { max-width: 400px; margin: auto; background: #f9f9f9; padding: 20px; border-radius: 8px; }
-        input, button { width: 100%; margin: 10px 0; padding: 10px; }
+        input, select, button { width: 100%; margin: 10px 0; padding: 10px; }
     </style>
 </head>
 <body>
@@ -15,23 +15,53 @@
     <form id="dataForm">
         <input type="text" id="name" placeholder="Enter your name" required>
         <input type="email" id="email" placeholder="Enter your email" required>
+        <select id="timeSlot" required>
+            <option value="" disabled selected>Select a time slot</option>
+        </select>
         <button type="submit">Submit</button>
     </form>
     <script>
+        const sheetDBUrl = 'https://sheetdb.io/api/v1/purojoltz4ayd';
+
+        // Fetch available time slots
+        function loadTimeSlots() {
+            fetch(sheetDBUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const timeSlotDropdown = document.getElementById('timeSlot');
+                    timeSlotDropdown.innerHTML = '<option value="" disabled selected>Select a time slot</option>';
+                    data.forEach(entry => {
+                        if (!entry.Booked) { // Assuming "Booked" column is empty for available slots
+                            const option = document.createElement('option');
+                            option.value = entry.TimeSlot;
+                            option.textContent = entry.TimeSlot;
+                            timeSlotDropdown.appendChild(option);
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading time slots:', error));
+        }
+
         document.getElementById('dataForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
+            const timeSlot = document.getElementById('timeSlot').value;
 
-            fetch('https://sheetdb.io/api/v1/purojoltz4ayd', {
+            fetch(sheetDBUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: { Name: name, Email: email } })
+                body: JSON.stringify({ data: { Name: name, Email: email, TimeSlot: timeSlot, Booked: 'Yes' } })
             })
             .then(response => response.json())
-            .then(data => alert('Data saved successfully!'))
+            .then(data => {
+                alert('Booking confirmed!');
+                loadTimeSlots(); // Refresh available slots
+            })
             .catch(error => alert('Error saving data.'));
         });
+
+        loadTimeSlots();
     </script>
 </body>
 </html>
