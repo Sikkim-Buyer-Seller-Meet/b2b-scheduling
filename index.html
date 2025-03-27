@@ -35,50 +35,61 @@
         </select>
         <select id="sectorInterest" required>
             <option value="" disabled selected>Select your sector of interest</option>
+            <option value="Agriculture">Agriculture</option>
+            <option value="Technology">Technology</option>
+            <option value="Manufacturing">Manufacturing</option>
+            <option value="Finance">Finance</option>
+            <option value="Healthcare">Healthcare</option>
         </select>
         <button type="submit">Submit</button>
     </form>
     <script>
         const sheetDBUrl = 'https://sheetdb.io/api/v1/purojoltz4ayd';
 
-        // Fetch available options from the backend
-        function loadOptions() {
+        function loadTimeSlots() {
             fetch(sheetDBUrl)
                 .then(response => response.json())
                 .then(data => {
                     const timeSlotDropdown = document.getElementById('timeSlot');
-                    const tableNumberDropdown = document.getElementById('tableNumber');
-                    const sectorInterestDropdown = document.getElementById('sectorInterest');
-                    
                     timeSlotDropdown.innerHTML = '<option value="" disabled selected>Select a time slot</option>';
-                    tableNumberDropdown.innerHTML = '<option value="" disabled selected>Select a table number</option>';
-                    sectorInterestDropdown.innerHTML = '<option value="" disabled selected>Select your sector of interest</option>';
                     
-                    data.forEach(entry => {
-                        if (!entry.Booked) { // Assuming "Booked" column is empty for available slots
-                            const timeOption = document.createElement('option');
-                            timeOption.value = entry.TimeSlot;
-                            timeOption.textContent = entry.TimeSlot;
-                            timeSlotDropdown.appendChild(timeOption);
-                        }
-                        
-                        if (entry.TableNumber) {
-                            const tableOption = document.createElement('option');
-                            tableOption.value = entry.TableNumber;
-                            tableOption.textContent = entry.TableNumber;
-                            tableNumberDropdown.appendChild(tableOption);
-                        }
-
-                        if (entry.SectorInterest) {
-                            const sectorOption = document.createElement('option');
-                            sectorOption.value = entry.SectorInterest;
-                            sectorOption.textContent = entry.SectorInterest;
-                            sectorInterestDropdown.appendChild(sectorOption);
+                    const uniqueSlots = [...new Set(data.map(entry => entry.TimeSlot))];
+                    uniqueSlots.forEach(slot => {
+                        if (data.some(entry => entry.TimeSlot === slot && entry.Booked !== 'Yes')) {
+                            const option = document.createElement('option');
+                            option.value = slot;
+                            option.textContent = slot;
+                            timeSlotDropdown.appendChild(option);
                         }
                     });
                 })
-                .catch(error => console.error('Error loading options:', error));
+                .catch(error => console.error('Error loading time slots:', error));
         }
+
+        function loadTables() {
+            const selectedTimeSlot = document.getElementById('timeSlot').value;
+            const tableDropdown = document.getElementById('tableNumber');
+            tableDropdown.innerHTML = '<option value="" disabled selected>Select a table number</option>';
+
+            fetch(sheetDBUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const availableTables = data.filter(entry => entry.TimeSlot === selectedTimeSlot && entry.Booked !== 'Yes');
+                    if (availableTables.length === 0) {
+                        alert('All tables are booked for this time. Please select another time slot.');
+                    } else {
+                        availableTables.forEach(entry => {
+                            const option = document.createElement('option');
+                            option.value = entry.TableNumber;
+                            option.textContent = entry.TableNumber;
+                            tableDropdown.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error loading tables:', error));
+        }
+
+        document.getElementById('timeSlot').addEventListener('change', loadTables);
 
         document.getElementById('dataForm').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -101,12 +112,12 @@
             .then(response => response.json())
             .then(data => {
                 alert('Booking confirmed!');
-                loadOptions(); // Refresh available options
+                loadTimeSlots();
             })
             .catch(error => alert('Error saving data.'));
         });
 
-        loadOptions();
+        loadTimeSlots();
     </script>
 </body>
 </html>
