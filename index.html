@@ -22,8 +22,15 @@
             event.preventDefault();
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
-            console.log('Name:', name, 'Email:', email);
-            alert('Data captured successfully!');
+
+            fetch('https://sheetdb.io/api/v1/purojoltz4ayd', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: { Name: name, Email: email } })
+            })
+            .then(response => response.json())
+            .then(data => alert('Data saved successfully!'))
+            .catch(error => alert('Error saving data.'));
         });
     </script>
 </body>
