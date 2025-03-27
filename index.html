@@ -108,8 +108,8 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.length > 0) {
-                        const rowId = data[0].id;
-                        fetch(`${sheetDBUrl}/id/${rowId}`, {
+                        const rowId = data[0].ID;
+                        fetch(`${sheetDBUrl}/ID/${rowId}`, {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ Name: name, Designation: designation, Organisation: organisation, Sector: sector, Contact: contact, Email: email, Role: role, SectorInterest: sectorInterest, Booked: 'Yes' })
