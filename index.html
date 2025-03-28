@@ -69,69 +69,59 @@
                 .catch(error => alert('Error loading time slots. Please try again.'));
         }
 
-        function loadTables() {
-            const selectedTimeSlot = document.getElementById('timeSlot').value;
-            const tableDropdown = document.getElementById('tableNumber');
-            tableDropdown.innerHTML = '<option value="" disabled selected>Select a table number</option>';
-            fetch(sheetDBUrl)
+        function checkBookingLimit(name, organisation) {
+            return fetch(`${sheetDBUrl}/search?Name=${name}&Organisation=${organisation}`)
                 .then(response => response.json())
-                .then(data => {
-                    const availableTables = data.filter(entry => entry.TimeSlot === selectedTimeSlot && entry.Booked !== 'Yes');
-                    if (availableTables.length === 0) {
-                        tableDropdown.innerHTML = '<option value="" disabled>No table available for this timeslot</option>';
-                    } else {
-                        availableTables.forEach(entry => {
-                            const option = document.createElement('option');
-                            option.value = entry.TableNumber;
-                            option.textContent = entry.TableNumber;
-                            tableDropdown.appendChild(option);
-                        });
-                    }
-                })
-                .catch(error => alert('Error loading tables. Please try again.'));
+                .then(data => data.length >= 3);
         }
-
-        document.getElementById('timeSlot').addEventListener('change', loadTables);
 
         document.getElementById('dataForm').addEventListener('submit', function(event) {
             event.preventDefault();
-            if (!confirm("Are you sure you want to book this slot?")) return;
-            document.querySelector('.loading').style.display = 'block';
-            const selectedTimeSlot = document.getElementById('timeSlot').value;
-            const selectedTable = document.getElementById('tableNumber').value;
+            const name = document.getElementById('name').value;
+            const organisation = document.getElementById('organisation').value;
 
-            fetch(`${sheetDBUrl}/search?TimeSlot=${selectedTimeSlot}&TableNumber=${selectedTable}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length > 0) {
-                        const rowID = data[0].ID;
-                        const formData = {
-                            Name: document.getElementById('name').value,
-                            Designation: document.getElementById('designation').value,
-                            Organisation: document.getElementById('organisation').value,
-                            Sector: document.getElementById('sector').value,
-                            Role: document.getElementById('role').value,
-                            SectorInterest: document.getElementById('sectorInterest').value,
-                            Booked: 'Yes'
-                        };
+            checkBookingLimit(name, organisation).then(limitReached => {
+                if (limitReached) {
+                    alert('You have already booked 3 slots. Further bookings are not allowed.');
+                    return;
+                }
+                document.querySelector('.loading').style.display = 'block';
+                const selectedTimeSlot = document.getElementById('timeSlot').value;
+                const selectedTable = document.getElementById('tableNumber').value;
 
-                        return fetch(`${sheetDBUrl}/ID/${rowID}`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(formData)
-                        });
-                    } else {
-                        throw new Error('Slot not found');
-                    }
-                })
-                .then(() => {
-                    alert('Booking successful!');
-                    document.querySelector('.loading').style.display = 'none';
-                    document.querySelector('.success-message').style.display = 'block';
-                    document.getElementById('dataForm').reset();
-                    loadTimeSlots();
-                })
-                .catch(error => alert('Error processing booking: ' + error.message));
+                fetch(`${sheetDBUrl}/search?TimeSlot=${selectedTimeSlot}&TableNumber=${selectedTable}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            const rowID = data[0].ID;
+                            const formData = {
+                                Name: name,
+                                Designation: document.getElementById('designation').value,
+                                Organisation: organisation,
+                                Sector: document.getElementById('sector').value,
+                                Role: document.getElementById('role').value,
+                                SectorInterest: document.getElementById('sectorInterest').value,
+                                Booked: 'Yes'
+                            };
+
+                            return fetch(`${sheetDBUrl}/ID/${rowID}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(formData)
+                            });
+                        } else {
+                            throw new Error('Slot not found');
+                        }
+                    })
+                    .then(() => {
+                        alert('Booking successful!');
+                        document.querySelector('.loading').style.display = 'none';
+                        document.querySelector('.success-message').style.display = 'block';
+                        document.getElementById('dataForm').reset();
+                        loadTimeSlots();
+                    })
+                    .catch(error => alert('Error processing booking: ' + error.message));
+            });
         });
 
         loadTimeSlots();
