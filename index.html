@@ -6,11 +6,15 @@
     <title>Data Capture Form</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        form { max-width: 400px; margin: auto; background: #f9f9f9; padding: 20px; border-radius: 8px; }
+        form { max-width: 400px; margin: auto; background: #f9f9f9; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
         input, select, button { width: 100%; margin: 10px 0; padding: 10px; }
+        .note { text-align: left; font-size: 0.9em; color: #555; margin-bottom: 10px; }
+        .loading { display: none; font-size: 0.9em; color: #007bff; }
+        .success-message { display: none; color: green; font-size: 1em; margin-top: 10px; }
     </style>
 </head>
 <body>
+    <div class="note">Note: Kindly use the same credentials you have used for delegate registration.</div>
     <h2>Data Capture Form</h2>
     <form id="dataForm">
         <input type="text" id="name" placeholder="Enter your name" required>
@@ -41,8 +45,10 @@
             <option value="Finance">Finance</option>
             <option value="Healthcare">Healthcare</option>
         </select>
+        <p class="loading">Processing your request...</p>
         <button type="submit">Submit</button>
     </form>
+    <p class="success-message">If you do not receive an email from us within 24 hours, kindly contact <a href="mailto:eshita.sharma@cii.in">eshita.sharma@cii.in</a></p>
     <script>
         const sheetDBUrl = 'https://sheetdb.io/api/v1/purojoltz4ayd';
 
@@ -52,7 +58,6 @@
                 .then(data => {
                     const timeSlotDropdown = document.getElementById('timeSlot');
                     timeSlotDropdown.innerHTML = '<option value="" disabled selected>Select a time slot</option>';
-                    
                     const uniqueSlots = [...new Set(data.map(entry => entry.TimeSlot))];
                     uniqueSlots.forEach(slot => {
                         if (data.some(entry => entry.TimeSlot === slot && entry.Booked !== 'Yes')) {
@@ -63,36 +68,14 @@
                         }
                     });
                 })
-                .catch(error => console.error('Error loading time slots:', error));
+                .catch(error => alert('Error loading time slots. Please try again.'));
         }
-
-        function loadTables() {
-            const selectedTimeSlot = document.getElementById('timeSlot').value;
-            const tableDropdown = document.getElementById('tableNumber');
-            tableDropdown.innerHTML = '<option value="" disabled selected>Select a table number</option>';
-
-            fetch(sheetDBUrl)
-                .then(response => response.json())
-                .then(data => {
-                    const availableTables = data.filter(entry => entry.TimeSlot === selectedTimeSlot && entry.Booked !== 'Yes');
-                    if (availableTables.length === 0) {
-                        alert('All tables are booked for this time. Please select another time slot.');
-                    } else {
-                        availableTables.forEach(entry => {
-                            const option = document.createElement('option');
-                            option.value = entry.TableNumber;
-                            option.textContent = entry.TableNumber;
-                            tableDropdown.appendChild(option);
-                        });
-                    }
-                })
-                .catch(error => console.error('Error loading tables:', error));
-        }
-
-        document.getElementById('timeSlot').addEventListener('change', loadTables);
 
         document.getElementById('dataForm').addEventListener('submit', function(event) {
             event.preventDefault();
+            if (!confirm("Are you sure you want to book this slot?")) return;
+
+            document.querySelector('.loading').style.display = 'block';
             const name = document.getElementById('name').value;
             const designation = document.getElementById('designation').value;
             const organisation = document.getElementById('organisation').value;
@@ -103,23 +86,37 @@
             const timeSlot = document.getElementById('timeSlot').value;
             const tableNumber = document.getElementById('tableNumber').value;
             const sectorInterest = document.getElementById('sectorInterest').value;
+            const timestamp = new Date().toISOString();
 
-            fetch(`${sheetDBUrl}/search?TimeSlot=${timeSlot}&TableNumber=${tableNumber}`)
+            fetch(`${sheetDBUrl}/search?TimeSlot=${encodeURIComponent(timeSlot)}&TableNumber=${encodeURIComponent(tableNumber)}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.length > 0 && data[0].Booked === 'Yes') {
                         alert('This table and time slot are already booked. Please choose another.');
-                        loadTables();
+                        document.querySelector('.loading').style.display = 'none';
                     } else if (data.length > 0) {
                         const rowId = data[0].ID;
                         fetch(`${sheetDBUrl}/ID/${rowId}`, {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ Name: name, Designation: designation, Organisation: organisation, Sector: sector, Contact: contact, Email: email, Role: role, SectorInterest: sectorInterest, Booked: 'Yes' })
+                            body: JSON.stringify({
+                                Name: name,
+                                Designation: designation,
+                                Organisation: organisation,
+                                Sector: sector,
+                                Contact: contact,
+                                Email: email,
+                                Role: role,
+                                SectorInterest: sectorInterest,
+                                Booked: 'Yes',
+                                Timestamp: timestamp
+                            })
                         })
                         .then(response => response.json())
                         .then(() => {
                             alert('Booking successful!');
+                            document.querySelector('.loading').style.display = 'none';
+                            document.querySelector('.success-message').style.display = 'block';
                             loadTimeSlots();
                         })
                         .catch(error => alert('Error updating booking.'));
@@ -127,7 +124,7 @@
                         alert('Error: Selected table-time slot does not exist!');
                     }
                 })
-                .catch(error => console.error('Error checking existing booking:', error));
+                .catch(error => alert('Error checking existing booking.'));
         });
 
         loadTimeSlots();
