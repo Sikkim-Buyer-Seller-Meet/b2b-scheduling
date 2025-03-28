@@ -95,33 +95,32 @@
 
         document.getElementById('dataForm').addEventListener('submit', function(event) {
             event.preventDefault();
-            const name = document.getElementById('name').value;
-            const organisation = document.getElementById('organisation').value;
-            fetch(`${sheetDBUrl}/search?Name=${encodeURIComponent(name)}&Organisation=${encodeURIComponent(organisation)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length >= 3) {
-                        alert('You have already booked 3 slots. Additional bookings are not allowed.');
-                    } else {
-                        if (!confirm("Are you sure you want to book this slot?")) return;
-                        document.querySelector('.loading').style.display = 'block';
-                        const formData = new FormData(event.target);
-                        fetch(sheetDBUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(Object.fromEntries(formData.entries()))
-                        })
-                        .then(() => {
-                            alert('Booking successful!');
-                            document.querySelector('.loading').style.display = 'none';
-                            document.querySelector('.success-message').style.display = 'block';
-                            event.target.reset();
-                            loadTimeSlots();
-                        })
-                        .catch(error => alert('Error processing booking.'));
-                    }
-                })
-                .catch(error => alert('Error checking existing bookings.'));
+            if (!confirm("Are you sure you want to book this slot?")) return;
+            document.querySelector('.loading').style.display = 'block';
+            const formData = {
+                Name: document.getElementById('name').value,
+                Designation: document.getElementById('designation').value,
+                Organisation: document.getElementById('organisation').value,
+                Sector: document.getElementById('sector').value,
+                Role: document.getElementById('role').value,
+                TimeSlot: document.getElementById('timeSlot').value,
+                TableNumber: document.getElementById('tableNumber').value,
+                SectorInterest: document.getElementById('sectorInterest').value,
+                Booked: 'Yes'
+            };
+            fetch(sheetDBUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: [formData] })
+            })
+            .then(() => {
+                alert('Booking successful!');
+                document.querySelector('.loading').style.display = 'none';
+                document.querySelector('.success-message').style.display = 'block';
+                document.getElementById('dataForm').reset();
+                loadTimeSlots();
+            })
+            .catch(error => alert('Error processing booking.'));
         });
 
         loadTimeSlots();
