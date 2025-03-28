@@ -50,6 +50,7 @@
             fetch(sheetDBUrl)
                 .then(response => response.json())
                 .then(data => {
+                    console.log("Time slots data:", data);
                     const timeSlotDropdown = document.getElementById('timeSlot');
                     timeSlotDropdown.innerHTML = '<option value="" disabled selected>Select a time slot</option>';
                     
@@ -74,6 +75,7 @@
             fetch(sheetDBUrl)
                 .then(response => response.json())
                 .then(data => {
+                    console.log("Tables data:", data);
                     const availableTables = data.filter(entry => entry.TimeSlot === selectedTimeSlot && entry.Booked !== 'Yes');
                     if (availableTables.length === 0) {
                         alert('All tables are booked for this time. Please select another time slot.');
@@ -105,36 +107,41 @@
             const sectorInterest = document.getElementById('sectorInterest').value;
             const timestamp = Date.now().toString();
 
+            console.log("Submitting data...", { name, designation, organisation, sector, contact, email, role, timeSlot, tableNumber, sectorInterest, timestamp });
+
             fetch(`${sheetDBUrl}/search?TimeSlot=${timeSlot}&TableNumber=${tableNumber}`)
                 .then(response => response.json())
                 .then(data => {
+                    console.log("Search API Response:", data);
                     if (data.length > 0 && data[0].Booked === 'Yes') {
                         alert('Someone else just booked this slot. Please select another.');
                         loadTables();
                     } else {
-                        fetch(sheetDBUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                Name: name,
-                                Designation: designation,
-                                Organisation: organisation,
-                                Sector: sector,
-                                Contact: contact,
-                                Email: email,
-                                Role: role,
-                                TimeSlot: timeSlot,
-                                TableNumber: tableNumber,
-                                SectorInterest: sectorInterest,
-                                Booked: 'Yes',
-                                Timestamp: timestamp
+                        const uniqueID = data.length > 0 ? data[0].ID : null;
+                        if (uniqueID) {
+                            console.log("Updating ID:", uniqueID);
+                            fetch(`${sheetDBUrl}/update/ID/${uniqueID}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    Name: name,
+                                    Designation: designation,
+                                    Organisation: organisation,
+                                    Sector: sector,
+                                    Contact: contact,
+                                    Email: email,
+                                    Role: role,
+                                    SectorInterest: sectorInterest,
+                                    Booked: 'Yes',
+                                    Timestamp: timestamp
+                                })
                             })
-                        })
-                        .then(() => {
-                            alert('Booking successful!');
-                            loadTimeSlots();
-                        })
-                        .catch(error => alert('Error updating booking.', error));
+                            .then(() => {
+                                alert('Booking successful!');
+                                loadTimeSlots();
+                            })
+                            .catch(error => alert('Error updating booking.'));
+                        }
                     }
                 })
                 .catch(error => console.error('Error checking existing booking:', error));
