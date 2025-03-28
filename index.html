@@ -108,11 +108,12 @@
                 SectorInterest: document.getElementById('sectorInterest').value,
                 Booked: 'Yes'
             };
-            fetch(sheetDBUrl, {
-                method: 'POST',
+            fetch(`${sheetDBUrl}/ID/${formData.ID}`, {
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: [formData] })
+                body: JSON.stringify(formData)
             })
+
             .then(() => {
                 alert('Booking successful!');
                 document.querySelector('.loading').style.display = 'none';
