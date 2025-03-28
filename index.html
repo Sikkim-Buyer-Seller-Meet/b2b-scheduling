@@ -8,21 +8,19 @@
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         form { max-width: 400px; margin: auto; background: #f9f9f9; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
         input, select, button { width: 100%; margin: 10px 0; padding: 10px; }
-        .note { text-align: left; font-size: 0.9em; color: #555; margin-bottom: 10px; }
+        .note { text-align: left; font-size: 1em; color: #333; font-weight: bold; margin-bottom: 10px; }
         .loading { display: none; font-size: 0.9em; color: #007bff; }
         .success-message { display: none; color: green; font-size: 1em; margin-top: 10px; }
     </style>
 </head>
 <body>
+    <h2>SIKKIM BUYER-SELLER MEET | B2B SCHEDULING</h2>
     <div class="note">Note: Kindly use the same credentials you have used for delegate registration.</div>
-    <h2>Data Capture Form</h2>
     <form id="dataForm">
         <input type="text" id="name" placeholder="Enter your name" required>
         <input type="text" id="designation" placeholder="Enter your designation" required>
         <input type="text" id="organisation" placeholder="Enter your organisation" required>
         <input type="text" id="sector" placeholder="Enter your sector" required>
-        <input type="tel" id="contact" placeholder="Enter your contact number" required>
-        <input type="email" id="email" placeholder="Enter your email" required>
         <select id="role" required>
             <option value="" disabled selected>Select your role</option>
             <option value="buyer">Buyer</option>
@@ -39,11 +37,11 @@
         </select>
         <select id="sectorInterest" required>
             <option value="" disabled selected>Select your sector of interest</option>
-            <option value="Agriculture">Agriculture</option>
-            <option value="Technology">Technology</option>
-            <option value="Manufacturing">Manufacturing</option>
-            <option value="Finance">Finance</option>
-            <option value="Healthcare">Healthcare</option>
+            <option value="Organic Food Products">Organic Food Products</option>
+            <option value="Processed Food Products">Processed Food Products</option>
+            <option value="Spices">Spices</option>
+            <option value="Handicrafts and Handloom">Handicrafts and Handloom</option>
+            <option value="Innovative Products">Innovative Products</option>
         </select>
         <p class="loading">Processing your request...</p>
         <button type="submit">Submit</button>
@@ -95,18 +93,10 @@
             event.preventDefault();
             if (!confirm("Are you sure you want to book this slot?")) return;
             document.querySelector('.loading').style.display = 'block';
-            const name = document.getElementById('name').value;
-            const designation = document.getElementById('designation').value;
-            const organisation = document.getElementById('organisation').value;
-            const sector = document.getElementById('sector').value;
-            const contact = document.getElementById('contact').value;
-            const email = document.getElementById('email').value;
-            const role = document.getElementById('role').value;
-            const timeSlot = document.getElementById('timeSlot').value;
-            const tableNumber = document.getElementById('tableNumber').value;
-            const sectorInterest = document.getElementById('sectorInterest').value;
+            const form = event.target;
+            const formData = new FormData(form);
             const timestamp = new Date().toISOString();
-            fetch(`${sheetDBUrl}/search?TimeSlot=${encodeURIComponent(timeSlot)}&TableNumber=${encodeURIComponent(tableNumber)}`)
+            fetch(`${sheetDBUrl}/search?TimeSlot=${encodeURIComponent(formData.get('timeSlot'))}&TableNumber=${encodeURIComponent(formData.get('tableNumber'))}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.length > 0 && data[0].Booked === 'Yes') {
@@ -117,23 +107,13 @@
                         fetch(`${sheetDBUrl}/ID/${rowId}`, {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                Name: name,
-                                Designation: designation,
-                                Organisation: organisation,
-                                Sector: sector,
-                                Contact: contact,
-                                Email: email,
-                                Role: role,
-                                SectorInterest: sectorInterest,
-                                Booked: 'Yes',
-                                Timestamp: timestamp
-                            })
+                            body: JSON.stringify(Object.fromEntries(formData.entries()))
                         })
                         .then(() => {
                             alert('Booking successful!');
                             document.querySelector('.loading').style.display = 'none';
                             document.querySelector('.success-message').style.display = 'block';
+                            form.reset();
                             loadTimeSlots();
                         })
                         .catch(error => alert('Error updating booking.'));
