@@ -71,10 +71,29 @@
                 .catch(error => alert('Error loading time slots. Please try again.'));
         }
 
+        function loadTables() {
+            const selectedTimeSlot = document.getElementById('timeSlot').value;
+            const tableDropdown = document.getElementById('tableNumber');
+            tableDropdown.innerHTML = '<option value="" disabled selected>Select a table number</option>';
+            fetch(sheetDBUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const availableTables = data.filter(entry => entry.TimeSlot === selectedTimeSlot && entry.Booked !== 'Yes');
+                    availableTables.forEach(entry => {
+                        const option = document.createElement('option');
+                        option.value = entry.TableNumber;
+                        option.textContent = entry.TableNumber;
+                        tableDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => alert('Error loading tables. Please try again.'));
+        }
+
+        document.getElementById('timeSlot').addEventListener('change', loadTables);
+
         document.getElementById('dataForm').addEventListener('submit', function(event) {
             event.preventDefault();
             if (!confirm("Are you sure you want to book this slot?")) return;
-
             document.querySelector('.loading').style.display = 'block';
             const name = document.getElementById('name').value;
             const designation = document.getElementById('designation').value;
@@ -87,7 +106,6 @@
             const tableNumber = document.getElementById('tableNumber').value;
             const sectorInterest = document.getElementById('sectorInterest').value;
             const timestamp = new Date().toISOString();
-
             fetch(`${sheetDBUrl}/search?TimeSlot=${encodeURIComponent(timeSlot)}&TableNumber=${encodeURIComponent(tableNumber)}`)
                 .then(response => response.json())
                 .then(data => {
@@ -112,7 +130,6 @@
                                 Timestamp: timestamp
                             })
                         })
-                        .then(response => response.json())
                         .then(() => {
                             alert('Booking successful!');
                             document.querySelector('.loading').style.display = 'none';
